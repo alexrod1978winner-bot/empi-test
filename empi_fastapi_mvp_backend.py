@@ -25,7 +25,7 @@ SESSIONS_FILE = DATA_DIR / "sessions.json"
 # Сюда вставь свой ключ авторизации GigaChat.
 # Это должен быть именно credentials / authorization key,
 # а не access token.
-GIGACHAT_CREDENTIALS = "MDE5YzY2YWUtZmU5My03ODZiLTlkM2ItZDZlZDljYzJhNDRjOjBiNDU3N2NmLTU0Y2QtNGVhZC04MDgzLTA1MjEyYWY3N2QxYg=="
+GIGACHAT_CREDENTIALS = os.getenv("GIGACHAT_CREDENTIALS")
 
 # Обычно для личного использования
 GIGACHAT_SCOPE = "GIGACHAT_API_PERS"

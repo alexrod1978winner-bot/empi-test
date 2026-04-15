@@ -1,4 +1,5 @@
 fastapi
-unicorn
+uvicorn
 pydantic
 gigachat
+python-dotenv
