@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Эмпи — диалог</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg-1: #c9c1b8;
+      --bg-2: #dad5cf;
+      --bg-3: #efebe6;
+
+      --panel: rgba(255, 255, 255, 0.56);
+      --panel-strong: rgba(255, 255, 255, 0.84);
+      --panel-soft: rgba(255, 255, 255, 0.42);
+
+      --text: #2f2a27;
+      --muted: #736d68;
+      --line: rgba(108, 100, 93, 0.16);
+
+      --accent: #9bd2ee;
+      --accent-2: #7fc1e4;
+      --accent-soft: rgba(155, 210, 238, 0.18);
+
+      --assistant: #f7f3ef;
+      --user: #dceefa;
+
+      --shadow-xl: 0 14px 40px rgba(39, 31, 25, 0.09);
+      --shadow-md: 0 8px 24px rgba(39, 31, 25, 0.06);
+
+      --radius-xl: 30px;
+      --radius-lg: 24px;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.34), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(255,255,255,0.18), transparent 22%),
+        linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 38%, var(--bg-3) 100%);
+      overflow: hidden;
+    }
+
+    .app {
+      max-width: 1120px;
+      margin: 0 auto;
+      height: 100vh;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: var(--radius-xl);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 50px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: 0.8px;
+    }
+
+    .brand p {
+      margin: 7px 0 0 0;
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.54);
+      border: 1px solid rgba(147, 201, 232, 0.55);
+      color: var(--text);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .layout {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .session-bar {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-radius: var(--radius-lg);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(14px);
+    }
+
+    .session-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(147, 201, 232, 0.6);
+    }
+
+    .session-note {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 12px 18px;
+      transition: 0.18s ease;
+      font-family: inherit;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-soft {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .btn-soft:hover:not(:disabled) {
+      background: rgba(255,255,255,0.88);
+    }
+
+    .chat-shell {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 36px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-xl);
+      backdrop-filter: blur(18px);
+      position: relative;
+    }
+
+    .chat-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.14), transparent 18%);
+      border-radius: 36px;
+    }
+
+    .survey-wrap {
+      display: none;
+      flex: 0 0 auto;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .survey-wrap.open {
+      display: block;
+    }
+
+    .survey-head {
+      padding: 16px 18px 0 18px;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .survey-inner {
+      padding: 16px 18px 12px 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px 18px;
+    }
+
+    .survey-actions {
+      padding: 0 18px 16px 18px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.88);
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+    }
+
+    select {
+      font-size: 16px;
+      padding: 12px 14px;
+    }
+
+    textarea {
+      font-size: 22px;
+      line-height: 1.35;
+      padding: 18px 20px;
+      resize: none;
+    }
+
+    select:focus, textarea:focus {
+      border-color: rgba(127, 193, 228, 0.95);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .messages {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 22px 18px 10px 18px;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: rgba(120, 112, 105, 0.18);
+      border-radius: 999px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 14px;
+      animation: fadeInUp 0.22s ease;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: min(760px, 88%);
+      padding: 17px 19px;
+      border-radius: 24px;
+      font-size: 24px;
+      line-height: 1.46;
+      word-break: break-word;
+      white-space: pre-wrap;
+      box-shadow: 0 4px 18px rgba(44,35,28,0.04);
+    }
+
+    .assistant .bubble {
+      background: var(--assistant);
+      border-top-left-radius: 10px;
+    }
+
+    .user .bubble {
+      background: var(--user);
+      border-top-right-radius: 10px;
+    }
+
+    .typing {
+      display: none;
+      flex: 0 0 auto;
+      padding: 0 22px 12px 22px;
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .composer {
+      flex: 0 0 auto;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.54);
+      padding: 16px 16px 18px 16px;
+      backdrop-filter: blur(12px);
+    }
+
+    .composer-box {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .composer textarea {
+      min-height: 78px;
+      max-height: 180px;
+      border-radius: 22px;
+      box-shadow: inset 0 1px 2px rgba(40,30,22,0.03);
+    }
+
+    .send-btn {
+      min-width: 136px;
+      height: 78px;
+      border: none;
+      border-radius: 22px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: inherit;
+      color: #183241;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      transition: 0.18s ease;
+      box-shadow: 0 10px 22px rgba(127, 193, 228, 0.22);
+    }
+
+    .send-btn:hover:not(:disabled) {
+      filter: brightness(0.97);
+      transform: translateY(-1px);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .hint {
+      margin-top: 10px;
+      padding-left: 4px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 920px) {
+      .brand h1 {
+        font-size: 42px;
+      }
+
+      .survey-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .bubble {
+        font-size: 22px;
+        max-width: 94%;
+      }
+
+      .composer textarea {
+        font-size: 21px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        padding: 10px;
+      }
+
+      .topbar {
+        padding: 16px;
+      }
+
+      .brand h1 {
+        font-size: 34px;
+      }
+
+      .brand p {
+        font-size: 15px;
+      }
+
+      .composer-box {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .send-btn {
+        width: 100%;
+        height: 64px;
+      }
+
+      .bubble {
+        font-size: 20px;
+      }
+
+      .composer textarea {
+        min-height: 68px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Эмпи</h1>
+        <p>быстрый помощник и приятный собеседник</p>
+      </div>
+
+      <div class="top-actions">
+        <div class="chip">Источник: GigaChat</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="session-bar">
+        <div class="session-left">
+          <div class="status-badge" id="sessionStatusBadge">Готов к диалогу</div>
+          <div class="session-note" id="sessionNote">Просто напишите первое сообщение</div>
+        </div>
+
+        <button class="btn btn-soft" id="toggleSurveyBtn">Короткая анкета</button>
+      </div>
+
+      <section class="chat-shell">
+        <div class="survey-wrap" id="surveyWrap">
+          <div class="survey-head">
+            Заполнять необязательно. Это поможет лучше понять ваш привычный образ жизни.
+          </div>
+
+          <div class="survey-inner">
+            <div class="field">
+              <label for="ageGroup">1. Сколько вам лет?</label>
+              <select id="ageGroup">
+                <option value="">Не хочу указывать</option>
+                <option value="under_50">Менее 50</option>
+                <option value="50_60">50–60</option>
+                <option value="60_70">60–70</option>
+                <option value="70_80">70–80</option>
+                <option value="80_plus">Более 80</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="retired">2. Вы сейчас на пенсии?</label>
+              <select id="retired">
+                <option value="">Не хочу указывать</option>
+                <option value="yes">Да</option>
+                <option value="no">Нет</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="timePlace">3. Где больше любите проводить время?</label>
+              <select id="timePlace">
+                <option value="">Не хочу указывать</option>
+                <option value="home">Дома</option>
+                <option value="outside">Вне дома</option>
+                <option value="no_matter">Не важно</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="partner">4. У вас есть жена / муж?</label>
+              <select id="partner">
+                <option value="">Не хочу указывать</option>
+                <option value="yes">Да</option>
+                <option value="no">Нет</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="pet">5. Есть домашний питомец?</label>
+              <select id="pet">
+                <option value="">Не хочу указывать</option>
+                <option value="yes">Да</option>
+                <option value="no">Нет</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="survey-actions">
+            <button class="btn btn-soft" id="saveSurveyBtn">Сделано</button>
+          </div>
+        </div>
+
+        <div class="messages" id="chat">
+          <div class="message assistant">
+            <div class="bubble">Здравствуйте. Я рядом. Можем просто поговорить.</div>
+          </div>
+        </div>
+
+        <div class="typing" id="typing">Эмпи печатает...</div>
+
+        <div class="composer">
+          <div class="composer-box">
+            <textarea
+              id="input"
+              placeholder="Напишите сообщение..."
+            ></textarea>
+            <button class="send-btn" id="sendBtn">Отправить</button>
+          </div>
+          <div class="hint">Enter — отправить, Shift+Enter — новая строка.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "http://localhost:8000";
+
+    const state = {
+      sessionId: null,
+      isPending: false,
+      isStarted: false,
+      turnIndex: 0
+    };
+
+    const el = (id) => document.getElementById(id);
+
+    const toggleSurveyBtn = el("toggleSurveyBtn");
+    const saveSurveyBtn = el("saveSurveyBtn");
+    const surveyWrap = el("surveyWrap");
+    const sendBtn = el("sendBtn");
+    const inputEl = el("input");
+    const chatEl = el("chat");
+    const typingEl = el("typing");
+    const sessionStatusBadge = el("sessionStatusBadge");
+    const sessionNote = el("sessionNote");
+
+    function setStarted(started) {
+      state.isStarted = started;
+      sessionStatusBadge.textContent = started ? "Диалог идёт" : "Готов к диалогу";
+      sessionNote.textContent = started
+        ? "Можно продолжать разговор"
+        : "Просто напишите первое сообщение";
+    }
+
+    function setPending(flag) {
+      state.isPending = flag;
+      inputEl.disabled = flag;
+      sendBtn.disabled = flag;
+      toggleSurveyBtn.disabled = flag;
+      saveSurveyBtn.disabled = flag;
+      typingEl.style.display = flag ? "block" : "none";
+    }
+
+    function autoResizeTextarea() {
+      inputEl.style.height = "auto";
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 180) + "px";
+    }
+
+    function appendMessage(role, text) {
+      const msg = document.createElement("div");
+      msg.className = `message ${role}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      msg.appendChild(bubble);
+      chatEl.appendChild(msg);
+
+      requestAnimationFrame(() => {
+        chatEl.scrollTop = chatEl.scrollHeight;
+      });
+    }
+
+    function collectSurvey() {
+      return {
+        age_group: el("ageGroup").value,
+        retired: el("retired").value,
+        time_place: el("timePlace").value,
+        partner: el("partner").value,
+        pet: el("pet").value
+      };
+    }
+
+    async function ensureSessionStarted() {
+      if (state.sessionId) return;
+
+      const payload = {
+        tester_name: "user",
+        scenario_type: "free_dialog",
+        test_goal: "простое общение",
+        model_version: "10.6.4",
+        llm_provider: "gigachat",
+        params: JSON.stringify({
+          survey: collectSurvey()
+        })
+      };
+
+      const response = await fetch(`${API_BASE_URL}/start-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error("Не удалось начать диалог");
+      }
+
+      const data = await response.json();
+      state.sessionId = data.session_id;
+      state.turnIndex = 0;
+      state.isStarted = true;
+
+      chatEl.innerHTML = "";
+      appendMessage("assistant", data.welcome_message || "Здравствуйте. Я рядом.");
+      setStarted(true);
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      setPending(true);
+
+      try {
+        if (!state.sessionId) {
+          await ensureSessionStarted();
+        }
+
+        appendMessage("user", text);
+        inputEl.value = "";
+        autoResizeTextarea();
+
+        state.turnIndex += 1;
+
+        const response = await fetch(`${API_BASE_URL}/run-turn`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: state.sessionId,
+            user_input: text,
+            turn_index: state.turnIndex
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Не удалось получить ответ");
+        }
+
+        const data = await response.json();
+        appendMessage("assistant", data.model_response || "Ответ не получен.");
+      } catch (error) {
+        appendMessage("assistant", "Извините, сейчас не получилось ответить. Попробуйте ещё раз.");
+      } finally {
+        setPending(false);
+      }
+    }
+
+    toggleSurveyBtn.addEventListener("click", () => {
+      surveyWrap.classList.toggle("open");
+    });
+
+    saveSurveyBtn.addEventListener("click", () => {
+      surveyWrap.classList.remove("open");
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    inputEl.addEventListener("input", autoResizeTextarea);
+
+    inputEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        if (!sendBtn.disabled) sendMessage();
+      }
+    });
+
+    setStarted(false);
+    autoResizeTextarea();
+  </script>
+</body>
+</html>

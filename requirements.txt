@@ -1,0 +1,4 @@
+fastapi
+unicorn
+pydantic
+gigachat
