@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from gigachat import GigaChat
 
+import os
 import json
 import time
 import uuid
@@ -21,10 +22,7 @@ DATA_DIR = Path("./data")
 EXPORT_DIR = DATA_DIR / "exports"
 SESSIONS_FILE = DATA_DIR / "sessions.json"
 
-# ВАЖНО:
-# Сюда вставь свой ключ авторизации GigaChat.
-# Это должен быть именно credentials / authorization key,
-# а не access token.
+# Ключ GigaChat берём из переменных окружения Render
 GIGACHAT_CREDENTIALS = os.getenv("GIGACHAT_CREDENTIALS")
 
 # Обычно для личного использования
@@ -33,8 +31,11 @@ GIGACHAT_SCOPE = "GIGACHAT_API_PERS"
 # Можно начать с обычной модели
 GIGACHAT_MODEL = "GigaChat"
 
+# Создаём папки, если их нет
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Создаём файл сессий, если его нет
 if not SESSIONS_FILE.exists():
     SESSIONS_FILE.write_text("{}", encoding="utf-8")
 
@@ -260,7 +261,7 @@ def build_profile_summary_from_survey(params_value: str) -> str:
 def build_survey_prompt_context(session: dict[str, Any]) -> str:
     profile_summary = session.get("profile_summary", "").strip()
     if not profile_summary:
-      return ""
+        return ""
 
     return (
         "Дополнительный мягкий контекст о пользователе из короткой анкеты. "
@@ -348,7 +349,7 @@ def build_gigachat_messages(
 
 
 def call_gigachat(messages: list[dict[str, str]]) -> str:
-    if not GIGACHAT_CREDENTIALS or GIGACHAT_CREDENTIALS == "PASTE_YOUR_GIGACHAT_AUTH_KEY_HERE":
+    if not GIGACHAT_CREDENTIALS:
         raise RuntimeError("Не задан GIGACHAT_CREDENTIALS")
 
     with GigaChat(
